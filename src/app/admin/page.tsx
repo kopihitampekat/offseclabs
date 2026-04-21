@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createPost, deletePost } from "@/app/admin/actions";
 import { requireAdminSession } from "@/lib/admin";
 import { getAdminPosts } from "@/lib/posts";
+import { SubmitButton } from "@/app/admin/submit-button";
 
 export const metadata: Metadata = {
   title: "Admin",
@@ -52,6 +53,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   const error = params?.error;
   const editSlug = params?.edit;
   const posts = await getAdminPosts();
+  const draftPosts = posts.filter((post) => !post.published);
+  const publishedPosts = posts.filter((post) => post.published);
   const editingPost = editSlug
     ? posts.find((post) => post.slug === editSlug) ?? null
     : null;
@@ -90,6 +93,33 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             {primaryEmail}
           </span>
           .
+        </div>
+
+        <div className="mt-8 grid gap-4 sm:grid-cols-3">
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
+            <p className="text-xs uppercase tracking-[0.24em] text-stone-500">
+              Total entries
+            </p>
+            <p className="mt-3 text-3xl font-semibold text-stone-100">
+              {posts.length}
+            </p>
+          </div>
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
+            <p className="text-xs uppercase tracking-[0.24em] text-stone-500">
+              Drafts
+            </p>
+            <p className="mt-3 text-3xl font-semibold text-amber-300">
+              {draftPosts.length}
+            </p>
+          </div>
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
+            <p className="text-xs uppercase tracking-[0.24em] text-stone-500">
+              Published
+            </p>
+            <p className="mt-3 text-3xl font-semibold text-lime-300">
+              {publishedPosts.length}
+            </p>
+          </div>
         </div>
 
         {unauthorized ? (
@@ -182,24 +212,28 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
             <label className="block rounded-3xl border border-white/10 bg-white/[0.04] p-6">
               <span className="text-sm font-medium text-stone-200">Content</span>
+              <span className="mt-2 block text-sm leading-7 text-stone-400">
+                Markdown is supported for headings, lists, code blocks, tables,
+                and links.
+              </span>
               <textarea
                 required
                 name="content"
                 rows={14}
                 defaultValue={editingPost?.content}
                 className="mt-3 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm leading-7 text-stone-100 outline-none transition placeholder:text-stone-500 focus:border-lime-300/50"
-                placeholder="Write paragraphs separated by blank lines."
+                placeholder={"## Research note\n\nWrite paragraphs, lists, and code blocks in Markdown."}
               />
             </label>
 
             <div className="flex flex-col gap-4 sm:flex-row">
-              <button
-                type="submit"
+              <SubmitButton
+                pendingLabel={editingPost ? "Saving changes..." : "Creating post..."}
                 className="inline-flex items-center justify-center rounded-full bg-lime-300 px-6 py-3 text-sm font-semibold text-stone-950 transition hover:bg-lime-200 disabled:cursor-not-allowed disabled:opacity-60"
                 disabled={!isConfigured || unauthorized}
               >
                 {editingPost ? "Save changes" : "Create post"}
-              </button>
+              </SubmitButton>
               <Link
                 href={editingPost ? "/admin" : "/blog"}
                 className="inline-flex items-center justify-center rounded-full border border-white/14 px-6 py-3 text-sm font-semibold text-stone-100 transition hover:border-white/30 hover:bg-white/5"
@@ -215,76 +249,148 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                 Existing posts
               </h2>
               <p className="mt-3 text-sm leading-7 text-stone-400">
-                Edit, review draft state, or remove entries directly from Neon.
+                Drafts and published notes are split out so the content queue is
+                easier to review.
               </p>
             </div>
 
-            <div className="space-y-4">
-              {posts.map((post) => (
-                <article
-                  key={post.slug}
-                  className="rounded-3xl border border-white/10 bg-white/[0.04] p-5"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.24em] text-stone-500">
-                        <span>{post.category}</span>
-                        <span>{post.date}</span>
-                        <span
-                          className={
-                            post.published ? "text-lime-300" : "text-amber-300"
-                          }
-                        >
-                          {post.published ? "Published" : "Draft"}
-                        </span>
+            <section className="space-y-4">
+              <div className="rounded-3xl border border-amber-300/20 bg-amber-300/[0.06] p-4">
+                <p className="text-xs uppercase tracking-[0.24em] text-amber-200">
+                  Drafts
+                </p>
+              </div>
+              {draftPosts.length === 0 ? (
+                <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 text-sm leading-7 text-stone-400">
+                  No drafts right now.
+                </div>
+              ) : (
+                draftPosts.map((post) => (
+                  <article
+                    key={post.slug}
+                    className="rounded-3xl border border-white/10 bg-white/[0.04] p-5"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.24em] text-stone-500">
+                          <span>{post.category}</span>
+                          <span>{post.date}</span>
+                          <span className="text-amber-300">Draft</span>
+                        </div>
+                        <h3 className="mt-3 text-lg font-semibold text-stone-100">
+                          {post.title}
+                        </h3>
+                        <p className="mt-2 text-sm leading-7 text-stone-400">
+                          {post.excerpt}
+                        </p>
                       </div>
-                      <h3 className="mt-3 text-lg font-semibold text-stone-100">
-                        {post.title}
-                      </h3>
-                      <p className="mt-2 text-sm leading-7 text-stone-400">
-                        {post.excerpt}
-                      </p>
                     </div>
-                  </div>
 
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    {post.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="rounded-full border border-white/10 px-3 py-1 text-xs text-stone-400"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
+                    <div className="mt-5 flex flex-wrap gap-2">
+                      {post.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="rounded-full border border-white/10 px-3 py-1 text-xs text-stone-400"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
 
-                  <div className="mt-6 flex flex-wrap gap-3">
-                    <Link
-                      href={`/admin?edit=${post.slug}`}
-                      className="inline-flex items-center justify-center rounded-full border border-white/14 px-4 py-2 text-sm font-medium text-stone-100 transition hover:border-white/30 hover:bg-white/5"
-                    >
-                      Edit
-                    </Link>
-                    <Link
-                      href={`/blog/${post.slug}`}
-                      className="inline-flex items-center justify-center rounded-full border border-white/14 px-4 py-2 text-sm font-medium text-stone-100 transition hover:border-white/30 hover:bg-white/5"
-                    >
-                      View
-                    </Link>
-                    <form action={deletePost}>
-                      <input type="hidden" name="slug" value={post.slug} />
-                      <button
-                        type="submit"
-                        className="inline-flex items-center justify-center rounded-full border border-rose-400/20 px-4 py-2 text-sm font-medium text-rose-100 transition hover:border-rose-300/40 hover:bg-rose-400/[0.08]"
-                        disabled={unauthorized || !isConfigured}
+                    <div className="mt-6 flex flex-wrap gap-3">
+                      <Link
+                        href={`/admin?edit=${post.slug}`}
+                        className="inline-flex items-center justify-center rounded-full border border-white/14 px-4 py-2 text-sm font-medium text-stone-100 transition hover:border-white/30 hover:bg-white/5"
                       >
-                        Delete
-                      </button>
-                    </form>
-                  </div>
-                </article>
-              ))}
-            </div>
+                        Edit
+                      </Link>
+                      <form action={deletePost}>
+                        <input type="hidden" name="slug" value={post.slug} />
+                        <SubmitButton
+                          pendingLabel="Deleting..."
+                          className="inline-flex items-center justify-center rounded-full border border-rose-400/20 px-4 py-2 text-sm font-medium text-rose-100 transition hover:border-rose-300/40 hover:bg-rose-400/[0.08] disabled:cursor-not-allowed disabled:opacity-60"
+                          disabled={unauthorized || !isConfigured}
+                        >
+                          Delete
+                        </SubmitButton>
+                      </form>
+                    </div>
+                  </article>
+                ))
+              )}
+            </section>
+
+            <section className="space-y-4">
+              <div className="rounded-3xl border border-lime-300/20 bg-lime-300/[0.06] p-4">
+                <p className="text-xs uppercase tracking-[0.24em] text-lime-200">
+                  Published
+                </p>
+              </div>
+              {publishedPosts.length === 0 ? (
+                <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 text-sm leading-7 text-stone-400">
+                  No published posts yet.
+                </div>
+              ) : (
+                publishedPosts.map((post) => (
+                  <article
+                    key={post.slug}
+                    className="rounded-3xl border border-white/10 bg-white/[0.04] p-5"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.24em] text-stone-500">
+                          <span>{post.category}</span>
+                          <span>{post.date}</span>
+                          <span className="text-lime-300">Published</span>
+                        </div>
+                        <h3 className="mt-3 text-lg font-semibold text-stone-100">
+                          {post.title}
+                        </h3>
+                        <p className="mt-2 text-sm leading-7 text-stone-400">
+                          {post.excerpt}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-5 flex flex-wrap gap-2">
+                      {post.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="rounded-full border border-white/10 px-3 py-1 text-xs text-stone-400"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="mt-6 flex flex-wrap gap-3">
+                      <Link
+                        href={`/admin?edit=${post.slug}`}
+                        className="inline-flex items-center justify-center rounded-full border border-white/14 px-4 py-2 text-sm font-medium text-stone-100 transition hover:border-white/30 hover:bg-white/5"
+                      >
+                        Edit
+                      </Link>
+                      <Link
+                        href={`/blog/${post.slug}`}
+                        className="inline-flex items-center justify-center rounded-full border border-white/14 px-4 py-2 text-sm font-medium text-stone-100 transition hover:border-white/30 hover:bg-white/5"
+                      >
+                        View
+                      </Link>
+                      <form action={deletePost}>
+                        <input type="hidden" name="slug" value={post.slug} />
+                        <SubmitButton
+                          pendingLabel="Deleting..."
+                          className="inline-flex items-center justify-center rounded-full border border-rose-400/20 px-4 py-2 text-sm font-medium text-rose-100 transition hover:border-rose-300/40 hover:bg-rose-400/[0.08] disabled:cursor-not-allowed disabled:opacity-60"
+                          disabled={unauthorized || !isConfigured}
+                        >
+                          Delete
+                        </SubmitButton>
+                      </form>
+                    </div>
+                  </article>
+                ))
+              )}
+            </section>
           </aside>
         </div>
       </section>

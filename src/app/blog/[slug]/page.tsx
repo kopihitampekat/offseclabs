@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { getAllPosts, getPostBySlug } from "@/lib/posts";
 
 type Props = {
@@ -76,10 +78,8 @@ export default async function BlogPostPage({ params }: Props) {
             ))}
           </div>
 
-          <div className="mt-10 space-y-6 border-t border-white/10 pt-10 text-base leading-8 text-stone-300">
-            {post.content.split("\n\n").map((paragraph) => (
-              <p key={paragraph}>{paragraph}</p>
-            ))}
+          <div className="markdown-body mt-10 border-t border-white/10 pt-10 text-base leading-8 text-stone-300">
+            <Markdown remarkPlugins={[remarkGfm]}>{post.content}</Markdown>
           </div>
         </article>
       </section>
