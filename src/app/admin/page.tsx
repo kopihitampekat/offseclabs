@@ -27,7 +27,8 @@ const fields = [
   {
     name: "publishedAt",
     label: "Publish date",
-    placeholder: "2026-04-21T11:00:00.000Z",
+    placeholder: "",
+    type: "datetime-local",
   },
   {
     name: "tags",
@@ -105,6 +106,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                 </span>
                 <input
                   name={field.name}
+                  type={field.type ?? "text"}
                   className="mt-3 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-stone-100 outline-none transition placeholder:text-stone-500 focus:border-lime-300/50"
                   placeholder={field.placeholder}
                 />
