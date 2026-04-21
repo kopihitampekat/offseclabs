@@ -17,16 +17,20 @@ function slugify(value: string) {
     .slice(0, 80);
 }
 
+function redirectWithError(message: string): never {
+  redirect(`/admin?error=${encodeURIComponent(message)}`);
+}
+
 export async function createPost(formData: FormData) {
   const { userId } = await auth();
   const sql = getDatabase();
 
   if (!sql) {
-    throw new Error("DATABASE_URL is not configured.");
+    redirectWithError("DATABASE_URL is not configured.");
   }
 
   if (!userId) {
-    throw new Error("Unauthorized.");
+    redirectWithError("Your session is not authorized for this action.");
   }
 
   const title = toText(formData.get("title"));
@@ -37,13 +41,13 @@ export async function createPost(formData: FormData) {
   const publishedAtInput = toText(formData.get("publishedAt"));
 
   if (!title || !excerpt || !content) {
-    throw new Error("Title, excerpt, and content are required.");
+    redirectWithError("Title, excerpt, and content are required.");
   }
 
   const slug = slugify(toText(formData.get("slug")) || title);
 
   if (!slug) {
-    throw new Error("A valid slug could not be generated.");
+    redirectWithError("A valid slug could not be generated.");
   }
 
   const tags = tagsInput
@@ -51,32 +55,53 @@ export async function createPost(formData: FormData) {
     .map((tag) => tag.trim())
     .filter(Boolean);
 
-  const publishedAt = publishedAtInput
-    ? new Date(publishedAtInput).toISOString()
-    : new Date().toISOString();
+  let publishedAt = new Date().toISOString();
 
-  await sql`
-    INSERT INTO posts (
-      slug,
-      title,
-      category,
-      excerpt,
-      content,
-      tags,
-      published,
-      published_at
-    )
-    VALUES (
-      ${slug},
-      ${title},
-      ${category},
-      ${excerpt},
-      ${content},
-      ${tags},
-      TRUE,
-      ${publishedAt}
-    )
-  `;
+  if (publishedAtInput) {
+    const parsedDate = new Date(publishedAtInput);
+
+    if (Number.isNaN(parsedDate.getTime())) {
+      redirectWithError("Publish date must be a valid ISO date string.");
+    }
+
+    publishedAt = parsedDate.toISOString();
+  }
+
+  try {
+    await sql`
+      INSERT INTO posts (
+        slug,
+        title,
+        category,
+        excerpt,
+        content,
+        tags,
+        published,
+        published_at
+      )
+      VALUES (
+        ${slug},
+        ${title},
+        ${category},
+        ${excerpt},
+        ${content},
+        ${tags},
+        TRUE,
+        ${publishedAt}
+      )
+    `;
+  } catch (error) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "23505"
+    ) {
+      redirectWithError("That slug already exists. Choose a different slug.");
+    }
+
+    redirectWithError("Failed to create the post in Neon.");
+  }
 
   revalidatePath("/blog");
   revalidatePath(`/blog/${slug}`);

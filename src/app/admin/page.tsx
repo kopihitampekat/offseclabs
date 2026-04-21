@@ -36,10 +36,18 @@ const fields = [
   },
 ];
 
-export default async function AdminPage() {
+type AdminPageProps = {
+  searchParams?: Promise<{
+    error?: string;
+  }>;
+};
+
+export default async function AdminPage({ searchParams }: AdminPageProps) {
   const user = await currentUser();
   const isConfigured = Boolean(process.env.DATABASE_URL);
   const primaryEmail = user?.primaryEmailAddress?.emailAddress;
+  const params = searchParams ? await searchParams : undefined;
+  const error = params?.error;
 
   return (
     <main className="min-h-screen">
@@ -72,6 +80,12 @@ export default async function AdminPage() {
           </span>
           .
         </div>
+
+        {error ? (
+          <div className="mt-8 rounded-3xl border border-rose-400/20 bg-rose-400/[0.08] p-5 text-sm leading-7 text-rose-100">
+            {error}
+          </div>
+        ) : null}
 
         {!isConfigured ? (
           <div className="mt-8 rounded-3xl border border-amber-300/20 bg-amber-300/[0.08] p-5 text-sm leading-7 text-amber-100">
