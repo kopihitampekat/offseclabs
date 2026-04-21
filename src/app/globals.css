@@ -159,6 +159,15 @@ select {
   border-collapse: collapse;
 }
 
+.markdown-body img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 1.5rem 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+}
+
 .markdown-body th,
 .markdown-body td {
   border: 1px solid rgba(255, 255, 255, 0.08);
