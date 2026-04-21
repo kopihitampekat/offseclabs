@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { MarkdownEditor } from "@/app/admin/markdown-editor";
 import { createPost, deletePost } from "@/app/admin/actions";
 import { requireAdminSession } from "@/lib/admin";
 import { getAdminPosts } from "@/lib/posts";
@@ -210,21 +211,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               />
             </label>
 
-            <label className="block rounded-3xl border border-white/10 bg-white/[0.04] p-6">
-              <span className="text-sm font-medium text-stone-200">Content</span>
-              <span className="mt-2 block text-sm leading-7 text-stone-400">
-                Markdown is supported for headings, lists, code blocks, tables,
-                and links.
-              </span>
-              <textarea
-                required
-                name="content"
-                rows={14}
-                defaultValue={editingPost?.content}
-                className="mt-3 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm leading-7 text-stone-100 outline-none transition placeholder:text-stone-500 focus:border-lime-300/50"
-                placeholder={"## Research note\n\nWrite paragraphs, lists, and code blocks in Markdown."}
-              />
-            </label>
+            <MarkdownEditor defaultValue={editingPost?.content} />
 
             <div className="flex flex-col gap-4 sm:flex-row">
               <SubmitButton
