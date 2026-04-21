@@ -4,6 +4,8 @@ import {
   UserButton,
 } from "@clerk/nextjs";
 import Link from "next/link";
+import { auth, currentUser } from "@clerk/nextjs/server";
+import { isAdminEmail } from "@/lib/admin";
 
 const pillars = [
   {
@@ -29,7 +31,13 @@ const notes = [
   "Neon-backed content layer",
 ];
 
-export default function Home() {
+export default async function Home() {
+  const { userId } = await auth();
+  const user = userId ? await currentUser() : null;
+  const canAccessAdmin = isAdminEmail(
+    user?.primaryEmailAddress?.emailAddress ?? null,
+  );
+
   return (
     <main className="min-h-screen">
       <section className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-8 sm:px-10 lg:px-12">
@@ -55,13 +63,15 @@ export default function Home() {
             </Show>
             <Show when="signed-in">
               <div className="flex items-center gap-3">
-                <Link
-                  href="/admin"
-                  prefetch={false}
-                  className="rounded-full border border-white/14 px-4 py-2 text-xs font-medium uppercase tracking-[0.2em] text-stone-200 transition hover:border-white/30 hover:bg-white/5"
-                >
-                  Admin
-                </Link>
+                {canAccessAdmin ? (
+                  <Link
+                    href="/admin"
+                    prefetch={false}
+                    className="rounded-full border border-white/14 px-4 py-2 text-xs font-medium uppercase tracking-[0.2em] text-stone-200 transition hover:border-white/30 hover:bg-white/5"
+                  >
+                    Admin
+                  </Link>
+                ) : null}
                 <UserButton />
               </div>
             </Show>

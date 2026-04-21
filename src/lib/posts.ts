@@ -13,6 +13,10 @@ export type Post = {
   content: string;
 };
 
+export type AdminPost = Post & {
+  published: boolean;
+};
+
 const fallbackPosts: Post[] = [
   {
     slug: "building-offseclabs",
@@ -52,6 +56,7 @@ type PostRow = {
   excerpt: string;
   tags: string[] | null;
   content: string;
+  published?: boolean;
 };
 
 const getSql = cache(() => {
@@ -67,6 +72,13 @@ function normalizePost(row: PostRow): Post {
     excerpt: row.excerpt,
     tags: row.tags ?? [],
     content: row.content,
+  };
+}
+
+function normalizeAdminPost(row: PostRow): AdminPost {
+  return {
+    ...normalizePost(row),
+    published: row.published ?? true,
   };
 }
 
@@ -129,5 +141,39 @@ export const getPostBySlug = cache(async (slug: string): Promise<Post | null> =>
     return post ? normalizePost(post) : null;
   } catch {
     return fallbackPosts.find((post) => post.slug === slug) ?? null;
+  }
+});
+
+export const getAdminPosts = cache(async (): Promise<AdminPost[]> => {
+  const sql = getSql();
+
+  if (!sql) {
+    return fallbackPosts.map((post) => ({
+      ...post,
+      published: true,
+    }));
+  }
+
+  try {
+    const rows = (await sql`
+      SELECT
+        slug,
+        title,
+        category,
+        TO_CHAR(published_at, 'YYYY-MM-DD') AS date,
+        excerpt,
+        COALESCE(tags, ARRAY[]::TEXT[]) AS tags,
+        content,
+        published
+      FROM posts
+      ORDER BY published_at DESC
+    `) as PostRow[];
+
+    return rows.map(normalizeAdminPost);
+  } catch {
+    return fallbackPosts.map((post) => ({
+      ...post,
+      published: true,
+    }));
   }
 });

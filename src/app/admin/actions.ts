@@ -1,8 +1,8 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { requireAdminSession } from "@/lib/admin";
 import { getDatabase } from "@/lib/db";
 
 function toText(value: FormDataEntryValue | null) {
@@ -22,23 +22,25 @@ function redirectWithError(message: string): never {
 }
 
 export async function createPost(formData: FormData) {
-  const { userId } = await auth();
+  const session = await requireAdminSession();
   const sql = getDatabase();
 
   if (!sql) {
     redirectWithError("DATABASE_URL is not configured.");
   }
 
-  if (!userId) {
-    redirectWithError("Your session is not authorized for this action.");
+  if (!session.ok) {
+    redirectWithError(session.reason);
   }
 
+  const originalSlug = toText(formData.get("originalSlug"));
   const title = toText(formData.get("title"));
   const category = toText(formData.get("category")) || "Research";
   const excerpt = toText(formData.get("excerpt"));
   const content = toText(formData.get("content"));
   const tagsInput = toText(formData.get("tags"));
   const publishedAtInput = toText(formData.get("publishedAt"));
+  const published = formData.get("published") === "on";
 
   if (!title || !excerpt || !content) {
     redirectWithError("Title, excerpt, and content are required.");
@@ -68,28 +70,45 @@ export async function createPost(formData: FormData) {
   }
 
   try {
-    await sql`
-      INSERT INTO posts (
-        slug,
-        title,
-        category,
-        excerpt,
-        content,
-        tags,
-        published,
-        published_at
-      )
-      VALUES (
-        ${slug},
-        ${title},
-        ${category},
-        ${excerpt},
-        ${content},
-        ${tags},
-        TRUE,
-        ${publishedAt}
-      )
-    `;
+    if (originalSlug) {
+      await sql`
+        UPDATE posts
+        SET
+          slug = ${slug},
+          title = ${title},
+          category = ${category},
+          excerpt = ${excerpt},
+          content = ${content},
+          tags = ${tags},
+          published = ${published},
+          published_at = ${publishedAt},
+          updated_at = NOW()
+        WHERE slug = ${originalSlug}
+      `;
+    } else {
+      await sql`
+        INSERT INTO posts (
+          slug,
+          title,
+          category,
+          excerpt,
+          content,
+          tags,
+          published,
+          published_at
+        )
+        VALUES (
+          ${slug},
+          ${title},
+          ${category},
+          ${excerpt},
+          ${content},
+          ${tags},
+          ${published},
+          ${publishedAt}
+        )
+      `;
+    }
   } catch (error) {
     if (
       error &&
@@ -100,10 +119,48 @@ export async function createPost(formData: FormData) {
       redirectWithError("That slug already exists. Choose a different slug.");
     }
 
-    redirectWithError("Failed to create the post in Neon.");
+    redirectWithError(
+      originalSlug
+        ? "Failed to update the post in Neon."
+        : "Failed to create the post in Neon.",
+    );
   }
 
   revalidatePath("/blog");
+  revalidatePath("/admin");
   revalidatePath(`/blog/${slug}`);
   redirect(`/blog/${slug}`);
+}
+
+export async function deletePost(formData: FormData) {
+  const session = await requireAdminSession();
+  const sql = getDatabase();
+
+  if (!sql) {
+    redirectWithError("DATABASE_URL is not configured.");
+  }
+
+  if (!session.ok) {
+    redirectWithError(session.reason);
+  }
+
+  const slug = toText(formData.get("slug"));
+
+  if (!slug) {
+    redirectWithError("A slug is required to delete a post.");
+  }
+
+  try {
+    await sql`
+      DELETE FROM posts
+      WHERE slug = ${slug}
+    `;
+  } catch {
+    redirectWithError("Failed to delete the post from Neon.");
+  }
+
+  revalidatePath("/blog");
+  revalidatePath("/admin");
+  revalidatePath(`/blog/${slug}`);
+  redirect("/admin");
 }
