@@ -21,6 +21,36 @@ function redirectWithError(message: string): never {
   redirect(`/admin?error=${encodeURIComponent(message)}`);
 }
 
+function formatDatabaseError(error: unknown, fallbackMessage: string) {
+  if (!error || typeof error !== "object") {
+    return fallbackMessage;
+  }
+
+  const code = "code" in error && typeof error.code === "string" ? error.code : null;
+  const message =
+    "message" in error && typeof error.message === "string"
+      ? error.message
+      : fallbackMessage;
+
+  if (code === "23505") {
+    return "That slug already exists. Choose a different slug.";
+  }
+
+  if (code === "42P01") {
+    return "Neon table `posts` was not found. Run the SQL in neon/schema.sql first.";
+  }
+
+  if (code === "42703") {
+    return "Neon schema is out of date. Re-run neon/schema.sql so the posts columns match the app.";
+  }
+
+  if (code === "42501") {
+    return "Neon rejected the write due to database permissions.";
+  }
+
+  return `${fallbackMessage} (${message})`;
+}
+
 export async function createPost(formData: FormData) {
   const session = await requireAdminSession();
   const sql = getDatabase();
@@ -110,19 +140,13 @@ export async function createPost(formData: FormData) {
       `;
     }
   } catch (error) {
-    if (
-      error &&
-      typeof error === "object" &&
-      "code" in error &&
-      error.code === "23505"
-    ) {
-      redirectWithError("That slug already exists. Choose a different slug.");
-    }
-
     redirectWithError(
-      originalSlug
-        ? "Failed to update the post in Neon."
-        : "Failed to create the post in Neon.",
+      formatDatabaseError(
+        error,
+        originalSlug
+          ? "Failed to update the post in Neon."
+          : "Failed to create the post in Neon.",
+      ),
     );
   }
 
@@ -155,8 +179,10 @@ export async function deletePost(formData: FormData) {
       DELETE FROM posts
       WHERE slug = ${slug}
     `;
-  } catch {
-    redirectWithError("Failed to delete the post from Neon.");
+  } catch (error) {
+    redirectWithError(
+      formatDatabaseError(error, "Failed to delete the post from Neon."),
+    );
   }
 
   revalidatePath("/blog");
