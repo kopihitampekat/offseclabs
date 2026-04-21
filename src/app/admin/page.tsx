@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { createPost } from "@/app/admin/actions";
 
@@ -35,10 +36,10 @@ const fields = [
   },
 ];
 
-export default function AdminPage() {
-  const isConfigured = Boolean(
-    process.env.DATABASE_URL && process.env.ADMIN_SECRET,
-  );
+export default async function AdminPage() {
+  const user = await currentUser();
+  const isConfigured = Boolean(process.env.DATABASE_URL);
+  const primaryEmail = user?.primaryEmailAddress?.emailAddress;
 
   return (
     <main className="min-h-screen">
@@ -59,33 +60,26 @@ export default function AdminPage() {
             Create a post in Neon.
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-8 text-stone-400">
-            This is a minimal write path for private use. Every submission is
-            checked against <code>ADMIN_SECRET</code> on the server before any
-            insert runs.
+            This route is protected by Clerk sign-in. The server action checks
+            the active session again before inserting anything into Neon.
           </p>
         </header>
 
+        <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04] p-5 text-sm leading-7 text-stone-300">
+          Signed in as{" "}
+          <span className="font-medium text-stone-100">
+            {primaryEmail ?? user?.id ?? "unknown user"}
+          </span>
+          .
+        </div>
+
         {!isConfigured ? (
           <div className="mt-8 rounded-3xl border border-amber-300/20 bg-amber-300/[0.08] p-5 text-sm leading-7 text-amber-100">
-            Set <code>DATABASE_URL</code> and <code>ADMIN_SECRET</code> before
-            using this page.
+            Set <code>DATABASE_URL</code> before using this page.
           </div>
         ) : null}
 
         <form action={createPost} className="mt-8 space-y-6">
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
-            <label className="block text-sm font-medium text-stone-200">
-              Admin secret
-            </label>
-            <input
-              required
-              type="password"
-              name="adminSecret"
-              className="mt-3 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-stone-100 outline-none transition placeholder:text-stone-500 focus:border-lime-300/50"
-              placeholder="Configured in Vercel env"
-            />
-          </div>
-
           <div className="grid gap-5 sm:grid-cols-2">
             {fields.map((field) => (
               <label

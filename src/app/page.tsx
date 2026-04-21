@@ -1,3 +1,8 @@
+import {
+  Show,
+  SignInButton,
+  UserButton,
+} from "@clerk/nextjs";
 import Link from "next/link";
 
 const pillars = [
@@ -35,10 +40,31 @@ export default function Home() {
           >
             OffSecLabs
           </Link>
-          <div className="flex items-center gap-3 text-xs uppercase tracking-[0.24em] text-stone-400">
-            <span>Vercel</span>
-            <span className="h-1 w-1 rounded-full bg-lime-300" />
-            <span>Neon</span>
+          <div className="flex items-center gap-3">
+            <div className="hidden items-center gap-3 text-xs uppercase tracking-[0.24em] text-stone-400 sm:flex">
+              <span>Vercel</span>
+              <span className="h-1 w-1 rounded-full bg-lime-300" />
+              <span>Neon</span>
+            </div>
+            <Show when="signed-out">
+              <SignInButton mode="modal">
+                <button className="rounded-full border border-white/14 px-4 py-2 text-xs font-medium uppercase tracking-[0.2em] text-stone-200 transition hover:border-white/30 hover:bg-white/5">
+                  Sign in
+                </button>
+              </SignInButton>
+            </Show>
+            <Show when="signed-in">
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/admin"
+                  prefetch={false}
+                  className="rounded-full border border-white/14 px-4 py-2 text-xs font-medium uppercase tracking-[0.2em] text-stone-200 transition hover:border-white/30 hover:bg-white/5"
+                >
+                  Admin
+                </Link>
+                <UserButton />
+              </div>
+            </Show>
           </div>
         </header>
 

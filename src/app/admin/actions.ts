@@ -1,5 +1,6 @@
 "use server";
 
+import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getDatabase } from "@/lib/db";
@@ -17,20 +18,14 @@ function slugify(value: string) {
 }
 
 export async function createPost(formData: FormData) {
-  const adminSecret = process.env.ADMIN_SECRET;
+  const { userId } = await auth();
   const sql = getDatabase();
-
-  if (!adminSecret) {
-    throw new Error("ADMIN_SECRET is not configured.");
-  }
 
   if (!sql) {
     throw new Error("DATABASE_URL is not configured.");
   }
 
-  const submittedSecret = toText(formData.get("adminSecret"));
-
-  if (submittedSecret !== adminSecret) {
+  if (!userId) {
     throw new Error("Unauthorized.");
   }
 
