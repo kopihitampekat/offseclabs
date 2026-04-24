@@ -1,8 +1,26 @@
 import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { requireAdminSession } from "@/lib/admin";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
+  const clientIp = getClientIp(request) ?? "unknown";
+  const rateLimitResult = rateLimit(`upload:${clientIp}`, 5, 60_000);
+
+  if (!rateLimitResult.success) {
+    return NextResponse.json(
+      { error: "Too many uploads. Please try again in a minute." },
+      {
+        status: 429,
+        headers: {
+          "X-RateLimit-Limit": "5",
+          "X-RateLimit-Remaining": "0",
+          "X-RateLimit-Reset": String(rateLimitResult.resetAt),
+        },
+      }
+    );
+  }
+
   const session = await requireAdminSession();
 
   if (!session.ok) {

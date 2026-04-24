@@ -5,6 +5,8 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { getAllPosts, getPostBySlug } from "@/lib/posts";
 
+export const revalidate = 300;
+
 type Props = {
   params: Promise<{
     slug: string;
@@ -22,6 +24,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const post = await getPostBySlug(slug);
+  const baseUrl = "https://offseclabs.xyz";
 
   if (!post) {
     return {
@@ -32,6 +35,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${post.title} | OffSecLabs`,
     description: post.excerpt,
+    openGraph: {
+      title: post.title,
+      description: post.excerpt,
+      type: "article",
+      publishedTime: post.date,
+      authors: ["OffSecLabs"],
+      tags: post.tags,
+      url: `${baseUrl}/blog/${slug}`,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: post.excerpt,
+    },
   };
 }
 
