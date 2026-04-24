@@ -11,6 +11,7 @@ export type Post = {
   excerpt: string;
   tags: string[];
   content: string;
+  readingTime: number;
 };
 
 export type AdminPost = Post & {
@@ -31,6 +32,7 @@ const fallbackPosts: Post[] = [
 Vercel handles deployment and previews well for this kind of content site. Neon becomes useful once posts, tags, notes, and lab entries need structured storage and simple querying.
 
 The initial version stays intentionally small so future changes are additive instead of corrective.`,
+    readingTime: 1,
   },
   {
     slug: "research-pipeline",
@@ -45,6 +47,7 @@ The initial version stays intentionally small so future changes are additive ins
 For OffSecLabs, the content model is simple enough to start with posts, categories, excerpts, and tags. That keeps the first Neon schema small while leaving room for richer content later.
 
 The point is not to overbuild the CMS. The point is to preserve useful research and ship it quickly.`,
+    readingTime: 1,
   },
   {
     slug: "exposed-admin-surfaces-in-modern-saas",
@@ -277,6 +280,13 @@ const getSql = cache(() => {
   return getDatabase();
 });
 
+function calculateReadingTime(content: string): number {
+  const wordsPerMinute = 200;
+  const text = content.replace(/\W/g, " ");
+  const wordCount = text.trim().split(/\s+/).length;
+  return Math.max(1, Math.ceil(wordCount / wordsPerMinute));
+}
+
 function normalizePost(row: PostRow): Post {
   return {
     slug: row.slug,
@@ -286,6 +296,7 @@ function normalizePost(row: PostRow): Post {
     excerpt: row.excerpt,
     tags: row.tags ?? [],
     content: row.content,
+    readingTime: calculateReadingTime(row.content),
   };
 }
 
