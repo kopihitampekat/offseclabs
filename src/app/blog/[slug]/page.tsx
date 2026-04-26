@@ -54,11 +54,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
-  const post = await getPostBySlug(slug);
+  const [post, allPosts] = await Promise.all([getPostBySlug(slug), getAllPosts()]);
 
   if (!post) {
     notFound();
   }
+
+  const currentIndex = allPosts.findIndex((p) => p.slug === slug);
+  const previousPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
+  const nextPost = currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null;
 
   return (
     <main className="min-h-screen">
@@ -76,6 +80,8 @@ export default async function BlogPostPage({ params }: Props) {
           <div className="flex flex-wrap items-center gap-4 text-xs uppercase tracking-[0.24em] text-stone-500">
             <span>{post.category}</span>
             <span>{post.date}</span>
+            <span className="text-stone-600">·</span>
+            <span>{post.readingTime} min read</span>
           </div>
           <h1 className="mt-6 max-w-3xl text-4xl font-semibold tracking-[-0.04em] text-stone-50 sm:text-5xl">
             {post.title}
@@ -99,6 +105,49 @@ export default async function BlogPostPage({ params }: Props) {
             <Markdown remarkPlugins={[remarkGfm]}>{post.content}</Markdown>
           </div>
         </article>
+
+        {(previousPost || nextPost) && (
+          <nav className="border-t border-white/10 py-10">
+            <div className="grid gap-4 sm:grid-cols-2">
+              {previousPost ? (
+                <Link
+                  href={`/blog/${previousPost.slug}`}
+                  className="group rounded-2xl border border-white/10 bg-white/[0.04] p-6 transition hover:border-white/20 hover:bg-white/[0.06]"
+                >
+                  <span className="text-xs uppercase tracking-[0.24em] text-stone-500">
+                    Previous
+                  </span>
+                  <p className="mt-2 text-lg font-semibold text-stone-100 transition group-hover:text-lime-200">
+                    {previousPost.title}
+                  </p>
+                  <p className="mt-1 text-sm text-stone-500">
+                    {previousPost.readingTime} min read
+                  </p>
+                </Link>
+              ) : (
+                <div />
+              )}
+              {nextPost ? (
+                <Link
+                  href={`/blog/${nextPost.slug}`}
+                  className="group rounded-2xl border border-white/10 bg-white/[0.04] p-6 transition hover:border-white/20 hover:bg-white/[0.06] sm:text-right"
+                >
+                  <span className="text-xs uppercase tracking-[0.24em] text-stone-500">
+                    Next
+                  </span>
+                  <p className="mt-2 text-lg font-semibold text-stone-100 transition group-hover:text-lime-200">
+                    {nextPost.title}
+                  </p>
+                  <p className="mt-1 text-sm text-stone-500">
+                    {nextPost.readingTime} min read
+                  </p>
+                </Link>
+              ) : (
+                <div />
+              )}
+            </div>
+          </nav>
+        )}
       </section>
     </main>
   );

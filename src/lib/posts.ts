@@ -262,6 +262,7 @@ That makes them ideal for long-form research posts:
 - the outcome is actionable for engineering, security, and platform teams
 
 For OffSecLabs, this is the kind of research note worth publishing: technically informed, operationally grounded, and immediately useful without crossing into reckless detail.`,
+    readingTime: 9,
   },
 ];
 
