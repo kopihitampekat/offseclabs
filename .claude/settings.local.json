@@ -2,7 +2,18 @@
   "permissions": {
     "allow": [
       "Bash(npm install *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(npx next *)",
+      "Bash(mv src/v2/app/blog/\\\\[slug\\\\]/page.tsx src/app/v2/blog/\\\\[slug\\\\]/page.tsx)",
+      "Bash(mv src/v2/app/blog/\\\\[slug\\\\]/opengraph-image.tsx src/app/v2/blog/\\\\[slug\\\\]/opengraph-image.tsx)",
+      "Bash(mv src/v2/app/labs/\\\\[slug\\\\]/page.tsx src/app/v2/labs/\\\\[slug\\\\]/page.tsx)",
+      "Bash(mkdir -p src/app/v2/blog/\\\\[slug\\\\] src/app/v2/labs/\\\\[slug\\\\] src/app/v2/tools src/app/v2/about src/app/v2/admin src/app/v2/feed.xml)",
+      "Bash(cp src/v2/app/blog/\\\\[slug\\\\]/page.tsx src/app/v2/blog/\\\\[slug\\\\]/page.tsx)",
+      "Bash(cp src/v2/app/blog/\\\\[slug\\\\]/opengraph-image.tsx src/app/v2/blog/\\\\[slug\\\\]/opengraph-image.tsx)",
+      "Bash(cp src/v2/app/labs/\\\\[slug\\\\]/page.tsx src/app/v2/labs/\\\\[slug\\\\]/page.tsx)",
+      "Bash(mv \"src/v2/app/blog/[slug]/page.tsx\" src/app/v2/blog/\\\\[slug\\\\]/page.tsx)",
+      "Bash(mv \"src/v2/app/blog/[slug]/opengraph-image.tsx\" src/app/v2/blog/\\\\[slug\\\\]/opengraph-image.tsx)",
+      "Bash(mv \"src/v2/app/labs/[slug]/page.tsx\" src/app/v2/labs/\\\\[slug\\\\]/page.tsx)"
     ]
   }
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BlogSearch } from "@/app/blog/blog-search";
 import { getAllPosts } from "@/lib/posts";
 
 export const revalidate = 300;
@@ -38,41 +39,7 @@ export default async function BlogPage() {
           </p>
         </header>
 
-        <div className="mt-10 grid gap-5">
-          {posts.map((post) => (
-            <article
-              key={post.slug}
-              className="rounded-3xl border border-white/10 bg-white/[0.04] p-6 transition hover:border-lime-300/40 hover:bg-white/[0.06]"
-            >
-              <div className="flex flex-wrap items-center gap-4 text-xs uppercase tracking-[0.24em] text-stone-500">
-                <span>{post.category}</span>
-                <span>{post.date}</span>
-              </div>
-              <h2 className="mt-4 text-2xl font-semibold text-stone-100">
-                {post.title}
-              </h2>
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-stone-400">
-                {post.excerpt}
-              </p>
-              <div className="mt-5 flex flex-wrap gap-2">
-                {post.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full border border-white/10 px-3 py-1 text-xs text-stone-400"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-              <Link
-                href={`/blog/${post.slug}`}
-                className="mt-6 inline-flex items-center rounded-full border border-white/12 px-4 py-2 text-sm font-medium text-stone-200 transition hover:border-lime-300/40 hover:text-lime-200"
-              >
-                Read note
-              </Link>
-            </article>
-          ))}
-        </div>
+        <BlogSearch posts={posts} />
       </section>
     </main>
   );

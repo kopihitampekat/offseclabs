@@ -1,0 +1,222 @@
+@import "tailwindcss";
+
+:root {
+  --v2-background: #0a0a0a;
+  --v2-foreground: #f5f5f4;
+  --v2-accent: #bef264;
+  --v2-accent-dim: #a3e635;
+  --v2-surface: #141414;
+  --v2-surface-hover: #1a1a1a;
+  --v2-border: rgba(255, 255, 255, 0.08);
+  --v2-border-hover: rgba(255, 255, 255, 0.16);
+}
+
+@theme inline {
+  --color-v2-background: var(--v2-background);
+  --color-v2-foreground: var(--v2-foreground);
+  --color-v2-accent: var(--v2-accent);
+  --color-v2-surface: var(--v2-surface);
+  --font-sans: var(--font-space-grotesk);
+  --font-mono: var(--font-ibm-plex-mono);
+}
+
+.v2-theme {
+  min-height: 100vh;
+  background: var(--v2-background);
+  color: var(--v2-foreground);
+}
+
+/* Cards */
+.v2-theme .card {
+  border: 1px solid var(--v2-border);
+  background: var(--v2-surface);
+  border-radius: 1.5rem;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.v2-theme .card:hover {
+  border-color: var(--v2-border-hover);
+  background: var(--v2-surface-hover);
+}
+
+/* Hero gradient */
+.v2-theme .hero-gradient {
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% -20%, rgba(190, 242, 100, 0.12), transparent),
+    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.04), transparent 24%),
+    linear-gradient(180deg, #0e0e0e 0%, #0a0a0a 55%, #060606 100%);
+}
+
+/* Reading progress */
+.v2-theme .reading-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: var(--v2-accent);
+  z-index: 100;
+  transition: width 0.1s linear;
+}
+
+/* Code copy button */
+.v2-theme .code-copy-btn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.v2-theme .group:hover .code-copy-btn {
+  opacity: 1;
+}
+
+/* Scrollbar */
+.v2-theme ::-webkit-scrollbar {
+  width: 6px;
+}
+
+.v2-theme ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.v2-theme ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+/* Markdown body */
+.v2-theme .markdown-body {
+  color: #d6d3d1;
+}
+
+.v2-theme .markdown-body > :first-child {
+  margin-top: 0;
+}
+
+.v2-theme .markdown-body > :last-child {
+  margin-bottom: 0;
+}
+
+.v2-theme .markdown-body h1,
+.v2-theme .markdown-body h2,
+.v2-theme .markdown-body h3,
+.v2-theme .markdown-body h4 {
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  color: #fafaf9;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+}
+
+.v2-theme .markdown-body h1 {
+  font-size: 2.25rem;
+}
+
+.v2-theme .markdown-body h2 {
+  font-size: 1.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--v2-border);
+}
+
+.v2-theme .markdown-body h3 {
+  font-size: 1.35rem;
+}
+
+.v2-theme .markdown-body p,
+.v2-theme .markdown-body ul,
+.v2-theme .markdown-body ol,
+.v2-theme .markdown-body blockquote,
+.v2-theme .markdown-body pre,
+.v2-theme .markdown-body table {
+  margin: 1.25rem 0;
+}
+
+.v2-theme .markdown-body ul,
+.v2-theme .markdown-body ol {
+  padding-left: 1.5rem;
+}
+
+.v2-theme .markdown-body li + li {
+  margin-top: 0.45rem;
+}
+
+.v2-theme .markdown-body a {
+  color: #d9f99d;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.v2-theme .markdown-body strong {
+  color: #fafaf9;
+}
+
+.v2-theme .markdown-body blockquote {
+  border-left: 3px solid rgba(190, 242, 100, 0.45);
+  padding-left: 1rem;
+  color: #a8a29e;
+}
+
+.v2-theme .markdown-body code {
+  border: 1px solid var(--v2-border);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.5rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.9em;
+  color: #f5f5f4;
+}
+
+.v2-theme .markdown-body pre {
+  overflow-x: auto;
+  border: 1px solid var(--v2-border);
+  background: rgba(0, 0, 0, 0.3);
+  padding: 1rem;
+  border-radius: 1rem;
+}
+
+.v2-theme .markdown-body pre code {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+
+.v2-theme .markdown-body hr {
+  border: 0;
+  border-top: 1px solid var(--v2-border);
+  margin: 2rem 0;
+}
+
+.v2-theme .markdown-body table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.v2-theme .markdown-body img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 1.5rem 0;
+  border: 1px solid var(--v2-border);
+  border-radius: 1rem;
+}
+
+.v2-theme .markdown-body th,
+.v2-theme .markdown-body td {
+  border: 1px solid var(--v2-border);
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.v2-theme .markdown-body th {
+  color: #fafaf9;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* Toast animation */
+@keyframes toast-in {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
