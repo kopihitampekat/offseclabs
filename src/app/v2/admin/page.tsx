@@ -5,6 +5,7 @@ import { createPost, deletePost } from "@/app/v2/admin/actions";
 import { requireAdminSession } from "@/lib/admin";
 import { getAdminPosts } from "@/v2/lib/posts";
 import { StatsCard } from "@/v2/components/admin/stats-card";
+import { DeleteButton } from "@/v2/components/admin/delete-button";
 import { siteConfig } from "@/v2/lib/config";
 import { TagChip } from "@/v2/components/shared/tag-chip";
 
@@ -165,13 +166,13 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             <MarkdownEditor defaultValue={editingPost?.content} />
 
             <div className="flex gap-3">
-              <button
-                type="submit"
+              <DeleteButton
+                
                 disabled={!isConfigured || unauthorized}
                 className="rounded-full bg-lime-300 px-6 py-2.5 text-sm font-semibold text-stone-950 transition hover:bg-lime-200 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {editingPost ? "Save changes" : "Create post"}
-              </button>
+              </DeleteButton>
               <Link
                 href={editingPost ? "/v2/admin" : "/v2/blog"}
                 className="rounded-full border border-white/14 px-6 py-2.5 text-sm font-semibold text-stone-200 transition hover:border-white/24 hover:bg-white/5"
@@ -215,15 +216,15 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                       >
                         Edit
                       </Link>
-                      <form action={deletePost}>
+                      <form action={deletePost} key={post.slug}>
                         <input type="hidden" name="slug" value={post.slug} />
-                        <button
-                          type="submit"
+                        <DeleteButton
+                          
                           disabled={unauthorized || !isConfigured}
                           className="rounded-lg border border-rose-400/20 px-3 py-1.5 text-xs text-rose-200 transition hover:bg-rose-400/[0.06] disabled:opacity-50"
                         >
                           Delete
-                        </button>
+                        </DeleteButton>
                       </form>
                     </div>
                   </article>
@@ -269,15 +270,15 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                       >
                         View
                       </Link>
-                      <form action={deletePost}>
+                      <form action={deletePost} key={post.slug}>
                         <input type="hidden" name="slug" value={post.slug} />
-                        <button
-                          type="submit"
+                        <DeleteButton
+                          
                           disabled={unauthorized || !isConfigured}
                           className="rounded-lg border border-rose-400/20 px-3 py-1.5 text-xs text-rose-200 transition hover:bg-rose-400/[0.06] disabled:opacity-50"
                         >
                           Delete
-                        </button>
+                        </DeleteButton>
                       </form>
                     </div>
                   </article>
