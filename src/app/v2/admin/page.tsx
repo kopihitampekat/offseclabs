@@ -6,6 +6,7 @@ import { requireAdminSession } from "@/lib/admin";
 import { getAdminPosts } from "@/v2/lib/posts";
 import { StatsCard } from "@/v2/components/admin/stats-card";
 import { DeleteButton } from "@/v2/components/admin/delete-button";
+import { SubmitFormButton } from "@/v2/components/admin/submit-form-button";
 import { siteConfig } from "@/v2/lib/config";
 import { TagChip } from "@/v2/components/shared/tag-chip";
 
@@ -18,20 +19,12 @@ const fields = [
   { name: "title", label: "Title", placeholder: "Detection Bypass Notes" },
   { name: "slug", label: "Slug", placeholder: "detection-bypass-notes" },
   { name: "category", label: "Category", placeholder: "Research" },
-  {
-    name: "publishedAt",
-    label: "Publish date",
-    placeholder: "",
-    type: "datetime-local",
-  },
+  { name: "publishedAt", label: "Publish date", type: "datetime-local" },
   { name: "tags", label: "Tags", placeholder: "neon, admin, publishing" },
 ];
 
 type AdminPageProps = {
-  searchParams?: Promise<{
-    error?: string;
-    edit?: string;
-  }>;
+  searchParams?: Promise<{ error?: string; edit?: string }>;
 };
 
 export default async function AdminPage({ searchParams }: AdminPageProps) {
@@ -68,17 +61,12 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           <StatsCard label="Total entries" value={posts.length} />
           <StatsCard label="Drafts" value={draftPosts.length} color="text-amber-300" />
-          <StatsCard
-            label="Published"
-            value={publishedPosts.length}
-            color="text-lime-300"
-          />
+          <StatsCard label="Published" value={publishedPosts.length} color="text-lime-300" />
         </div>
 
         {unauthorized && (
           <div className="mt-6 rounded-xl border border-rose-400/20 bg-rose-400/[0.06] p-4 text-sm text-rose-200">
-            {session.reason} Add your email to <code>ADMIN_EMAILS</code> to
-            access this panel.
+            {session.reason} Add your email to <code>ADMIN_EMAILS</code> to access this panel.
           </div>
         )}
 
@@ -96,21 +84,12 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
           <form action={createPost} className="space-y-5">
-            <input
-              type="hidden"
-              name="originalSlug"
-              value={editingPost?.slug ?? ""}
-            />
+            <input type="hidden" name="originalSlug" value={editingPost?.slug ?? ""} />
 
             <div className="grid gap-4 sm:grid-cols-2">
               {fields.map((field) => (
-                <label
-                  key={field.name}
-                  className="block rounded-xl border border-white/8 bg-surface p-5"
-                >
-                  <span className="text-sm font-medium text-stone-200">
-                    {field.label}
-                  </span>
+                <label key={field.name} className="block rounded-xl border border-white/8 bg-surface p-5">
+                  <span className="text-sm font-medium text-stone-200">{field.label}</span>
                   <input
                     name={field.name}
                     type={field.type ?? "text"}
@@ -136,12 +115,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
             <label className="flex items-center justify-between rounded-xl border border-white/8 bg-surface p-5">
               <div>
-                <span className="block text-sm font-medium text-stone-200">
-                  Publish now
-                </span>
-                <span className="mt-1 block text-xs text-stone-500">
-                  Turn off to save as draft
-                </span>
+                <span className="block text-sm font-medium text-stone-200">Publish now</span>
+                <span className="mt-1 block text-xs text-stone-500">Turn off to save as draft</span>
               </div>
               <input
                 type="checkbox"
@@ -166,13 +141,13 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             <MarkdownEditor defaultValue={editingPost?.content} />
 
             <div className="flex gap-3">
-              <DeleteButton
-                
-                disabled={!isConfigured || unauthorized}
+              <SubmitFormButton
+                pendingLabel={editingPost ? "Saving..." : "Creating..."}
                 className="rounded-full bg-lime-300 px-6 py-2.5 text-sm font-semibold text-stone-950 transition hover:bg-lime-200 disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={!isConfigured || unauthorized}
               >
                 {editingPost ? "Save changes" : "Create post"}
-              </DeleteButton>
+              </SubmitFormButton>
               <Link
                 href={editingPost ? "/v2/admin" : "/v2/blog"}
                 className="rounded-full border border-white/14 px-6 py-2.5 text-sm font-semibold text-stone-200 transition hover:border-white/24 hover:bg-white/5"
@@ -184,12 +159,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
           <aside className="space-y-6">
             <div className="rounded-xl border border-white/8 bg-surface p-5">
-              <h2 className="text-base font-semibold text-stone-100">
-                Existing posts
-              </h2>
-              <p className="mt-2 text-xs text-stone-500">
-                Drafts and published notes.
-              </p>
+              <h2 className="text-base font-semibold text-stone-100">Existing posts</h2>
+              <p className="mt-2 text-xs text-stone-500">Drafts and published notes.</p>
             </div>
 
             {draftPosts.length > 0 && (
@@ -206,9 +177,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                       <span>{post.date}</span>
                       <span className="text-amber-300">Draft</span>
                     </div>
-                    <h3 className="mt-2 text-sm font-semibold text-stone-100">
-                      {post.title}
-                    </h3>
+                    <h3 className="mt-2 text-sm font-semibold text-stone-100">{post.title}</h3>
                     <div className="mt-3 flex gap-2">
                       <Link
                         href={`/v2/admin?edit=${post.slug}`}
@@ -216,15 +185,9 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                       >
                         Edit
                       </Link>
-                      <form action={deletePost} key={post.slug}>
+                      <form action={deletePost}>
                         <input type="hidden" name="slug" value={post.slug} />
-                        <DeleteButton
-                          
-                          disabled={unauthorized || !isConfigured}
-                          className="rounded-lg border border-rose-400/20 px-3 py-1.5 text-xs text-rose-200 transition hover:bg-rose-400/[0.06] disabled:opacity-50"
-                        >
-                          Delete
-                        </DeleteButton>
+                        <DeleteButton title={post.title} disabled={unauthorized || !isConfigured} />
                       </form>
                     </div>
                   </article>
@@ -249,9 +212,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                       <span>{post.category}</span>
                       <span>{post.date}</span>
                     </div>
-                    <h3 className="mt-2 text-sm font-semibold text-stone-100">
-                      {post.title}
-                    </h3>
+                    <h3 className="mt-2 text-sm font-semibold text-stone-100">{post.title}</h3>
                     <div className="mt-2 flex flex-wrap gap-1">
                       {post.tags.slice(0, 3).map((tag) => (
                         <TagChip key={tag}>{tag}</TagChip>
@@ -270,15 +231,9 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                       >
                         View
                       </Link>
-                      <form action={deletePost} key={post.slug}>
+                      <form action={deletePost}>
                         <input type="hidden" name="slug" value={post.slug} />
-                        <DeleteButton
-                          
-                          disabled={unauthorized || !isConfigured}
-                          className="rounded-lg border border-rose-400/20 px-3 py-1.5 text-xs text-rose-200 transition hover:bg-rose-400/[0.06] disabled:opacity-50"
-                        >
-                          Delete
-                        </DeleteButton>
+                        <DeleteButton title={post.title} disabled={unauthorized || !isConfigured} />
                       </form>
                     </div>
                   </article>

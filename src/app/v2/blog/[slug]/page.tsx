@@ -11,7 +11,6 @@ import { TableOfContents } from "@/v2/components/blog/table-of-contents";
 import { ShareButtons } from "@/v2/components/blog/share-buttons";
 import { RelatedPosts } from "@/v2/components/blog/related-posts";
 import { PrevNextNav } from "@/v2/components/blog/prev-next-nav";
-import { CodeBlockWrapper } from "@/v2/components/blog/code-block";
 
 export const revalidate = 300;
 
