@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
+import { isAdminEmail } from "@/lib/admin";
+import { Navbar } from "@/components/layout/navbar";
+import { Footer } from "@/components/layout/footer";
+import { siteConfig } from "@/lib/config";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -15,38 +20,48 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://offseclabs.xyz"),
-  title: "OffSecLabs",
-  description:
-    "Minimal landing page for offseclabs.xyz, built for offensive security research, fast deployment on Vercel, and future Neon-backed content.",
+  metadataBase: new URL(siteConfig.url),
+  title: {
+    default: siteConfig.name,
+    template: `%s | ${siteConfig.name}`,
+  },
+  description: siteConfig.description,
   openGraph: {
-    title: "OffSecLabs",
-    description:
-      "A minimal home for offensive security research and experiments.",
-    url: "https://offseclabs.xyz",
-    siteName: "OffSecLabs",
+    title: siteConfig.name,
+    description: siteConfig.description,
+    url: siteConfig.url,
+    siteName: siteConfig.name,
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "OffSecLabs",
-    description:
-      "A minimal home for offensive security research and experiments.",
+    title: siteConfig.name,
+    description: siteConfig.description,
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { userId } = await auth();
+  const user = userId ? await currentUser() : null;
+  const canAccessAdmin = isAdminEmail(
+    user?.primaryEmailAddress?.emailAddress ?? null
+  );
+
   return (
     <html
       lang="en"
       className={`${spaceGrotesk.variable} ${ibmPlexMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-background text-foreground">
-        <ClerkProvider>{children}</ClerkProvider>
+      <body className="min-h-full">
+        <ClerkProvider>
+          <Navbar canAccessAdmin={canAccessAdmin} />
+          <div className="min-h-[calc(100vh-4rem)]">{children}</div>
+          <Footer />
+        </ClerkProvider>
       </body>
     </html>
   );

@@ -18,12 +18,8 @@ export function MarkdownEditor({ defaultValue = "" }: MarkdownEditorProps) {
 
   function updateContent(nextContent: string, selectionStart?: number) {
     setContent(nextContent);
-
     window.requestAnimationFrame(() => {
-      if (!textareaRef.current || selectionStart === undefined) {
-        return;
-      }
-
+      if (!textareaRef.current || selectionStart === undefined) return;
       textareaRef.current.focus();
       textareaRef.current.setSelectionRange(selectionStart, selectionStart);
     });
@@ -31,41 +27,27 @@ export function MarkdownEditor({ defaultValue = "" }: MarkdownEditorProps) {
 
   function insertAroundSelection(before: string, after = "", placeholder = "") {
     const textarea = textareaRef.current;
-
-    if (!textarea) {
-      return;
-    }
+    if (!textarea) return;
 
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const selected = content.slice(start, end) || placeholder;
     const nextContent =
       content.slice(0, start) + before + selected + after + content.slice(end);
-    const nextCursor = start + before.length + selected.length + after.length;
-
-    updateContent(nextContent, nextCursor);
+    updateContent(nextContent, start + before.length + selected.length + after.length);
   }
 
   function insertBlock(snippet: string) {
     const textarea = textareaRef.current;
-
-    if (!textarea) {
-      return;
-    }
+    if (!textarea) return;
 
     const start = textarea.selectionStart;
-    const nextContent = content.slice(0, start) + snippet + content.slice(start);
-    const nextCursor = start + snippet.length;
-
-    updateContent(nextContent, nextCursor);
+    updateContent(content.slice(0, start) + snippet + content.slice(start), start + snippet.length);
   }
 
   async function handleImageUpload(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
-
-    if (!file) {
-      return;
-    }
+    if (!file) return;
 
     setUploading(true);
     setUploadError(null);
@@ -82,71 +64,51 @@ export function MarkdownEditor({ defaultValue = "" }: MarkdownEditorProps) {
       const payload = (await response.json()) as { error?: string; url?: string };
 
       if (!response.ok || !payload.url) {
-        throw new Error(payload.error ?? "Image upload failed.");
+        throw new Error(payload.error ?? "Upload failed.");
       }
 
-      const imageMarkdown = `\n![${file.name}](${payload.url})\n`;
-      insertBlock(imageMarkdown);
+      insertBlock(`\n![${file.name}](${payload.url})\n`);
       event.target.value = "";
     } catch (error) {
-      setUploadError(
-        error instanceof Error ? error.message : "Image upload failed.",
-      );
+      setUploadError(error instanceof Error ? error.message : "Upload failed.");
     } finally {
       setUploading(false);
     }
   }
 
+  const toolbarButtons = [
+    { label: "H2", action: () => insertBlock("## Heading\n\n") },
+    { label: "Bold", action: () => insertAroundSelection("**", "**", "bold text") },
+    { label: "Code", action: () => insertAroundSelection("`", "`", "code") },
+    {
+      label: "Code block",
+      action: () => insertBlock("\n```ts\n// code\n```\n"),
+    },
+    { label: "Quote", action: () => insertBlock("\n> Callout note\n\n") },
+    {
+      label: "List",
+      action: () => insertBlock("\n- Item one\n- Item two\n\n"),
+    },
+  ];
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap gap-3 rounded-3xl border border-white/10 bg-white/[0.04] p-4">
-        <button
-          type="button"
-          onClick={() => insertBlock("## Heading\n\n")}
-          className="rounded-full border border-white/10 px-4 py-2 text-sm text-stone-200 transition hover:border-white/25 hover:bg-white/[0.06]"
-        >
-          H2
-        </button>
-        <button
-          type="button"
-          onClick={() => insertAroundSelection("**", "**", "bold text")}
-          className="rounded-full border border-white/10 px-4 py-2 text-sm text-stone-200 transition hover:border-white/25 hover:bg-white/[0.06]"
-        >
-          Bold
-        </button>
-        <button
-          type="button"
-          onClick={() => insertAroundSelection("`", "`", "inline code")}
-          className="rounded-full border border-white/10 px-4 py-2 text-sm text-stone-200 transition hover:border-white/25 hover:bg-white/[0.06]"
-        >
-          Code
-        </button>
-        <button
-          type="button"
-          onClick={() => insertBlock("\n```ts\n// code block\n```\n")}
-          className="rounded-full border border-white/10 px-4 py-2 text-sm text-stone-200 transition hover:border-white/25 hover:bg-white/[0.06]"
-        >
-          Code block
-        </button>
-        <button
-          type="button"
-          onClick={() => insertBlock("\n> Callout note\n\n")}
-          className="rounded-full border border-white/10 px-4 py-2 text-sm text-stone-200 transition hover:border-white/25 hover:bg-white/[0.06]"
-        >
-          Quote
-        </button>
-        <button
-          type="button"
-          onClick={() => insertBlock("\n- List item\n- List item\n\n")}
-          className="rounded-full border border-white/10 px-4 py-2 text-sm text-stone-200 transition hover:border-white/25 hover:bg-white/[0.06]"
-        >
-          List
-        </button>
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2 rounded-xl border border-white/8 bg-surface p-3">
+        {toolbarButtons.map((btn) => (
+          <button
+            key={btn.label}
+            type="button"
+            onClick={btn.action}
+            className="rounded-lg border border-white/8 px-3 py-1.5 text-xs text-stone-300 transition hover:border-white/16 hover:bg-white/[0.04]"
+          >
+            {btn.label}
+          </button>
+        ))}
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="rounded-full border border-lime-300/20 px-4 py-2 text-sm text-lime-200 transition hover:border-lime-300/40 hover:bg-lime-300/[0.08] disabled:cursor-not-allowed disabled:opacity-60"
           disabled={uploading}
+          className="rounded-lg border border-lime-300/20 px-3 py-1.5 text-xs text-lime-200 transition hover:border-lime-300/40 hover:bg-lime-300/[0.06] disabled:opacity-50"
         >
           {uploading ? "Uploading..." : "Image"}
         </button>
@@ -159,48 +121,45 @@ export function MarkdownEditor({ defaultValue = "" }: MarkdownEditorProps) {
         />
       </div>
 
-      {uploadError ? (
-        <div className="rounded-3xl border border-rose-400/20 bg-rose-400/[0.08] p-4 text-sm leading-7 text-rose-100">
+      {uploadError && (
+        <div className="rounded-xl border border-rose-400/20 bg-rose-400/[0.06] p-3 text-sm text-rose-200">
           {uploadError}
         </div>
-      ) : null}
+      )}
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <label className="block rounded-3xl border border-white/10 bg-white/[0.04] p-6">
+      <div className="grid gap-4 lg:grid-cols-2">
+        <label className="block rounded-xl border border-white/8 bg-surface p-5">
           <span className="text-sm font-medium text-stone-200">Content</span>
-          <span className="mt-2 block text-sm leading-7 text-stone-400">
-            Markdown is supported for headings, lists, code blocks, tables,
-            links, and uploaded images from Vercel Blob.
+          <span className="mt-1 block text-xs text-stone-500">
+            Markdown with syntax highlighting support
           </span>
           <textarea
             ref={textareaRef}
             required
             name="content"
-            rows={18}
+            rows={16}
             value={content}
-            onChange={(event) => setContent(event.target.value)}
-            className="mt-3 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm leading-7 text-stone-100 outline-none transition placeholder:text-stone-500 focus:border-lime-300/50"
-            placeholder={"## Research note\n\nWrite paragraphs, lists, and code blocks in Markdown."}
+            onChange={(e) => setContent(e.target.value)}
+            className="mt-3 w-full rounded-lg border border-white/8 bg-black/20 px-4 py-3 text-sm leading-7 text-stone-100 outline-none transition placeholder:text-stone-600 focus:border-lime-300/40"
+            placeholder="## Research note\n\nWrite your content here..."
           />
         </label>
 
-        <section className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
-          <div className="flex items-center justify-between gap-4">
+        <div className="rounded-xl border border-white/8 bg-surface p-5">
+          <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-stone-200">Preview</span>
-            <span className="text-xs uppercase tracking-[0.24em] text-stone-500">
-              Live markdown
+            <span className="text-[10px] uppercase tracking-[0.2em] text-stone-600">
+              Live
             </span>
           </div>
-          <div className="markdown-body mt-4 min-h-[28rem] rounded-2xl border border-white/10 bg-black/20 px-5 py-4 text-sm leading-7 text-stone-300">
+          <div className="markdown-body mt-3 min-h-[24rem] rounded-lg border border-white/8 bg-black/20 px-4 py-3 text-sm leading-7 text-stone-300">
             {deferredContent.trim() ? (
               <Markdown remarkPlugins={[remarkGfm]}>{deferredContent}</Markdown>
             ) : (
-              <p className="text-stone-500">
-                Start writing to preview the published article format.
-              </p>
+              <p className="text-stone-600">Start writing to preview.</p>
             )}
           </div>
-        </section>
+        </div>
       </div>
     </div>
   );

@@ -1,15 +1,17 @@
 import { getAllPosts } from "@/lib/posts";
+import { labs } from "@/lib/content";
+import { siteConfig } from "@/lib/config";
 
 export async function GET() {
   const posts = await getAllPosts();
-  const baseUrl = "https://offseclabs.xyz";
+  const baseUrl = siteConfig.url;
 
   const rss = `<?xml version="1.0" encoding="UTF-8" ?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>OffSecLabs</title>
+    <title>${escapeXml(siteConfig.name)}</title>
     <link>${baseUrl}</link>
-    <description>A minimal home for offensive security research and experiments.</description>
+    <description>${escapeXml(siteConfig.description)}</description>
     <language>en</language>
     <atom:link href="${baseUrl}/feed.xml" rel="self" type="application/rss+xml" />
     ${posts
@@ -23,6 +25,19 @@ export async function GET() {
       <category>${escapeXml(post.category)}</category>
       <description>${escapeXml(post.excerpt)}</description>
       ${post.tags.map((tag) => `<category>${escapeXml(tag)}</category>`).join("\n      ")}
+    </item>`
+      )
+      .join("")}
+    ${labs
+      .map(
+        (lab) => `
+    <item>
+      <title>${escapeXml(lab.title)}</title>
+      <link>${baseUrl}/labs/${lab.slug}</link>
+      <guid isPermaLink="true">${baseUrl}/labs/${lab.slug}</guid>
+      <pubDate>${new Date(lab.date).toUTCString()}</pubDate>
+      <category>${escapeXml(lab.category)}</category>
+      <description>${escapeXml(lab.excerpt)}</description>
     </item>`
       )
       .join("")}

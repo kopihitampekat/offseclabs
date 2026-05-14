@@ -1,18 +1,10 @@
 import { getPostBySlug } from "@/lib/posts";
 import { ImageResponse } from "next/og";
 
-export const size = {
-  width: 1200,
-  height: 630,
-};
-
+export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-type Props = {
-  params: Promise<{
-    slug: string;
-  }>;
-};
+type Props = { params: Promise<{ slug: string }> };
 
 export default async function OpenGraphImage({ params }: Props) {
   const { slug } = await params;
@@ -23,7 +15,7 @@ export default async function OpenGraphImage({ params }: Props) {
       (
         <div
           style={{
-            background: "#111111",
+            background: "#0a0a0a",
             width: "100%",
             height: "100%",
             display: "flex",
@@ -52,7 +44,6 @@ export default async function OpenGraphImage({ params }: Props) {
               letterSpacing: "-0.03em",
               lineHeight: 1.1,
               textAlign: "center",
-              maxWidth: "900px",
             }}
           >
             Offensive Security Research
@@ -67,7 +58,7 @@ export default async function OpenGraphImage({ params }: Props) {
     (
       <div
         style={{
-          background: "#111111",
+          background: "#0a0a0a",
           width: "100%",
           height: "100%",
           display: "flex",
@@ -76,7 +67,6 @@ export default async function OpenGraphImage({ params }: Props) {
           position: "relative",
         }}
       >
-        {/* Gradient accent */}
         <div
           style={{
             position: "absolute",
@@ -87,8 +77,6 @@ export default async function OpenGraphImage({ params }: Props) {
             background: "#bef264",
           }}
         />
-
-        {/* Header */}
         <div
           style={{
             display: "flex",
@@ -119,8 +107,6 @@ export default async function OpenGraphImage({ params }: Props) {
             {post.category}
           </div>
         </div>
-
-        {/* Title */}
         <div
           style={{
             color: "#fafaf9",
@@ -128,7 +114,6 @@ export default async function OpenGraphImage({ params }: Props) {
             fontWeight: 600,
             letterSpacing: "-0.03em",
             lineHeight: 1.15,
-            maxWidth: "100%",
             display: "-webkit-box",
             WebkitLineClamp: 3,
             WebkitBoxOrient: "vertical",
@@ -137,8 +122,6 @@ export default async function OpenGraphImage({ params }: Props) {
         >
           {post.title}
         </div>
-
-        {/* Footer */}
         <div
           style={{
             display: "flex",
@@ -147,12 +130,7 @@ export default async function OpenGraphImage({ params }: Props) {
             marginTop: "auto",
           }}
         >
-          <div
-            style={{
-              display: "flex",
-              gap: 12,
-            }}
-          >
+          <div style={{ display: "flex", gap: 12 }}>
             {post.tags.slice(0, 4).map((tag) => (
               <div
                 key={tag}
@@ -161,8 +139,8 @@ export default async function OpenGraphImage({ params }: Props) {
                   fontSize: 14,
                   padding: "8px 16px",
                   borderRadius: 9999,
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                  background: "rgba(255, 255, 255, 0.04)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  background: "rgba(255,255,255,0.04)",
                 }}
               >
                 {tag}

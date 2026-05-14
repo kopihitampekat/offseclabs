@@ -21,47 +21,31 @@ function redirectWithError(message: string): never {
   redirect(`/admin?error=${encodeURIComponent(message)}`);
 }
 
-function formatDatabaseError(error: unknown, fallbackMessage: string) {
-  if (!error || typeof error !== "object") {
-    return fallbackMessage;
-  }
+function formatDatabaseError(error: unknown, fallback: string) {
+  if (!error || typeof error !== "object") return fallback;
 
-  const code = "code" in error && typeof error.code === "string" ? error.code : null;
+  const code =
+    "code" in error && typeof error.code === "string" ? error.code : null;
   const message =
     "message" in error && typeof error.message === "string"
       ? error.message
-      : fallbackMessage;
+      : fallback;
 
-  if (code === "23505") {
-    return "That slug already exists. Choose a different slug.";
-  }
+  if (code === "23505") return "Slug already exists. Choose a different one.";
+  if (code === "42P01") return "Table not found. Run the Neon schema first.";
+  if (code === "42703")
+    return "Schema mismatch. Re-run the Neon schema to update columns.";
+  if (code === "42501") return "Database write permission denied.";
 
-  if (code === "42P01") {
-    return "Neon table `posts` was not found. Run the SQL in neon/schema.sql first.";
-  }
-
-  if (code === "42703") {
-    return "Neon schema is out of date. Re-run neon/schema.sql so the posts columns match the app.";
-  }
-
-  if (code === "42501") {
-    return "Neon rejected the write due to database permissions.";
-  }
-
-  return `${fallbackMessage} (${message})`;
+  return `${fallback} (${message})`;
 }
 
 export async function createPost(formData: FormData) {
   const session = await requireAdminSession();
   const sql = getDatabase();
 
-  if (!sql) {
-    redirectWithError("DATABASE_URL is not configured.");
-  }
-
-  if (!session.ok) {
-    redirectWithError(session.reason);
-  }
+  if (!sql) redirectWithError("DATABASE_URL is not configured.");
+  if (!session.ok) redirectWithError(session.reason);
 
   const originalSlug = toText(formData.get("originalSlug"));
   const title = toText(formData.get("title"));
@@ -77,10 +61,7 @@ export async function createPost(formData: FormData) {
   }
 
   const slug = slugify(toText(formData.get("slug")) || title);
-
-  if (!slug) {
-    redirectWithError("A valid slug could not be generated.");
-  }
+  if (!slug) redirectWithError("Could not generate a valid slug.");
 
   const tags = tagsInput
     .split(",")
@@ -88,65 +69,32 @@ export async function createPost(formData: FormData) {
     .filter(Boolean);
 
   let publishedAt = new Date().toISOString();
-
   if (publishedAtInput) {
-    const parsedDate = new Date(publishedAtInput);
-
-    if (Number.isNaN(parsedDate.getTime())) {
-      redirectWithError("Publish date must be a valid ISO date string.");
+    const parsed = new Date(publishedAtInput);
+    if (Number.isNaN(parsed.getTime())) {
+      redirectWithError("Invalid publish date.");
     }
-
-    publishedAt = parsedDate.toISOString();
+    publishedAt = parsed.toISOString();
   }
 
   try {
     if (originalSlug) {
       await sql`
-        UPDATE posts
-        SET
-          slug = ${slug},
-          title = ${title},
-          category = ${category},
-          excerpt = ${excerpt},
-          content = ${content},
-          tags = ${tags},
-          published = ${published},
-          published_at = ${publishedAt},
-          updated_at = NOW()
+        UPDATE posts SET
+          slug = ${slug}, title = ${title}, category = ${category},
+          excerpt = ${excerpt}, content = ${content}, tags = ${tags},
+          published = ${published}, published_at = ${publishedAt}, updated_at = NOW()
         WHERE slug = ${originalSlug}
       `;
     } else {
       await sql`
-        INSERT INTO posts (
-          slug,
-          title,
-          category,
-          excerpt,
-          content,
-          tags,
-          published,
-          published_at
-        )
-        VALUES (
-          ${slug},
-          ${title},
-          ${category},
-          ${excerpt},
-          ${content},
-          ${tags},
-          ${published},
-          ${publishedAt}
-        )
+        INSERT INTO posts (slug, title, category, excerpt, content, tags, published, published_at)
+        VALUES (${slug}, ${title}, ${category}, ${excerpt}, ${content}, ${tags}, ${published}, ${publishedAt})
       `;
     }
   } catch (error) {
     redirectWithError(
-      formatDatabaseError(
-        error,
-        originalSlug
-          ? "Failed to update the post in Neon."
-          : "Failed to create the post in Neon.",
-      ),
+      formatDatabaseError(error, originalSlug ? "Update failed." : "Create failed.")
     );
   }
 
@@ -160,29 +108,16 @@ export async function deletePost(formData: FormData) {
   const session = await requireAdminSession();
   const sql = getDatabase();
 
-  if (!sql) {
-    redirectWithError("DATABASE_URL is not configured.");
-  }
-
-  if (!session.ok) {
-    redirectWithError(session.reason);
-  }
+  if (!sql) redirectWithError("DATABASE_URL is not configured.");
+  if (!session.ok) redirectWithError(session.reason);
 
   const slug = toText(formData.get("slug"));
-
-  if (!slug) {
-    redirectWithError("A slug is required to delete a post.");
-  }
+  if (!slug) redirectWithError("Slug is required.");
 
   try {
-    await sql`
-      DELETE FROM posts
-      WHERE slug = ${slug}
-    `;
+    await sql`DELETE FROM posts WHERE slug = ${slug}`;
   } catch (error) {
-    redirectWithError(
-      formatDatabaseError(error, "Failed to delete the post from Neon."),
-    );
+    redirectWithError(formatDatabaseError(error, "Delete failed."));
   }
 
   revalidatePath("/blog");
